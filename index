@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>거인 창조자: 카드 디스펜서 & 손패 관리기</title>
+    <style>
+        :root {
+            --primary-color: #4a154b;
+            --accent-color: #ffb703;
+            --bg-color: #f4f1ea;
+            --monster-color: #e63946;
+            --potion-color: #2a9d8f;
+            --special-color: #7209b7;
+            --card-width: 110px;
+            --card-height: 160px;
+        }
+
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 5px;
+            text-align: center;
+        }
+
+        p.subtitle {
+            color: #666;
+            margin-top: 0;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .controls {
+            margin-bottom: 25px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+            background-color: #611f64;
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.reset-btn {
+            background-color: #6c757d;
+        }
+
+        .hand-container {
+            width: 100%;
+            max-width: 900px;
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title span.count {
+            font-size: 0.9rem;
+            background: #eee;
+            padding: 2px 8px;
+            border-radius: 12px;
+            color: #555;
+        }
+
+        .card-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            min-height: calc(var(--card-height) + 10px);
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        .card {
+            width: var(--card-width);
+            height: var(--card-height);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 12px;
+            box-sizing: border-box;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            position: relative;
+            user-select: none;
+            transition: transform 0.2s, box-shadow 0.2s, opacity 0.3s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .card:hover {
+            transform: translateY(-8px) scale(1.03);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.2);
+        }
+
+        .card::after {
+            content: "클릭시 사용";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .card:hover::after {
+            opacity: 1;
+        }
+
+        .monster { background: linear-gradient(135deg, #ff4b5c, var(--monster-color)); }
+        .potion { background: linear-gradient(135deg, #48cae4, var(--potion-color)); }
+        .special { background: linear-gradient(135deg, #9d4edd, var(--special-color)); }
+
+        .card-type {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.8;
+        }
+
+        .card-val {
+            font-size: 1.8rem;
+            text-align: center;
+            margin: auto 0;
+            word-break: break-all;
+        }
+
+        .card-desc {
+            font-size: 0.7rem;
+            text-align: center;
+            opacity: 0.9;
+            font-weight: normal;
+        }
+
+        .empty-msg {
+            color: #aaa;
+            font-style: italic;
+            width: 100%;
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        /* 사용한 카드 히스토리 */
+        .history-container {
+            width: 100%;
+            max-width: 900px;
+            background: #e9ecef;
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-top: 10px;
+        }
+
+        .history-title {
+            font-size: 0.95rem;
+            color: #6c757d;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .history-list {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .history-chip {
+            background: #fff;
+            padding: 4px 10px;
+            border-radius: 16px;
+            font-size: 0.8rem;
+            color: #495057;
+            border: 1px solid #ced4da;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🔮 거인 창조자: 카드 디스펜서</h1>
+    <p class="subtitle">버튼을 눌러 카드를 뽑고, 라운드에서 사용한 카드를 터치하여 사용 처리하세요.</p>
+
+    <div class="controls">
+        <button onclick="drawAllHand()">🎴 전체 12장 뽑기 (초기화)</button>
+        <button class="reset-btn" onclick="clearHand()">🧹 모든 손패 비우기</button>
+    </div>
+
+    <div class="hand-container">
+        <div class="section-title">
+            🔴 몬스터 카드 (자연수)
+            <span class="count" id="monster-count">0/5</span>
+        </div>
+        <div class="card-grid" id="monster-grid">
+            <div class="empty-msg">카드를 뽑아주세요.</div>
+        </div>
+    </div>
+
+    <div class="hand-container">
+        <div class="section-title">
+            🟢 물약 카드 (분수)
+            <span class="count" id="potion-count">0/5</span>
+        </div>
+        <div class="card-grid" id="potion-grid">
+            <div class="empty-msg">카드를 뽑아주세요.</div>
+        </div>
+    </div>
+
+    <div class="hand-container">
+        <div class="section-title">
+            🟣 특수 카드
+            <span class="count" id="special-count">0/2</span>
+        </div>
+        <div class="card-grid" id="special-grid">
+            <div class="empty-msg">카드를 뽑아주세요.</div>
+        </div>
+    </div>
+
+    <div class="history-container">
+        <div class="history-title">🗑️ 이번 판에 사용한 카드 목록</div>
+        <div class="history-list" id="history-list">
+            <span style="color: #999; font-size: 0.8rem;">사용한 카드가 여기에 표시됩니다.</span>
+        </div>
+    </div>
+
+    <script>
+        // 데이터 정의
+        const monsterPool = [2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20];
+        const potionPool = [
+            { val: "1/2", desc: "2배 증가" },
+            { val: "1/3", desc: "3배 증가" },
+            { val: "1/4", desc: "4배 증가" },
+            { val: "1/5", desc: "5배 증가" },
+            { val: "1/6", desc: "6배 증가" },
+            { val: "1/8", desc: "8배 증가" },
+            { val: "1/10", desc: "10배 증가" },
+            { val: "2/3", desc: "1.5배 증가" },
+            { val: "3/4", desc: "1.33배 증가" }
+        ];
+        const specialPool = [
+            { val: "÷ 2", desc: "상대 공격력 절반" },
+            { val: "÷ 1/10", desc: "내 공격력 10배 폭발" },
+            { val: "카드 교환", desc: "손패 1장 교체" },
+            { val: "시야 차단", desc: "비공개 턴 진행" }
+        ];
+
+        let hand = {
+            monster: [],
+            potion: [],
+            special: []
+        };
+        let usedHistory = [];
+
+        // 랜덤 셔플 함수
+        function getRandomItems(arr, count) {
+            const shuffled = [...arr].sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, count);
+        }
+
+        // 전체 카드를 새로 뽑기
+        function drawAllHand() {
+            hand.monster = getRandomItems(monsterPool, 5);
+            hand.potion = getRandomItems(potionPool, 5);
+            hand.special = getRandomItems(specialPool, 2);
+            usedHistory = [];
+            
+            render();
+        }
+
+        // 카드를 사용하여 손패에서 제거
+        function useCard(type, index) {
+            const usedItem = hand[type].splice(index, 1)[0];
+            
+            let label = "";
+            if (type === 'monster') label = `몬스터 (${usedItem})`;
+            else if (type === 'potion') label = `물약 (${usedItem.val})`;
+            else if (type === 'special') label = `특수 (${usedItem.val})`;
+
+            usedHistory.push(label);
+            render();
+        }
+
+        // 모든 카드를 비우기
+        function clearHand() {
+            hand = { monster: [], potion: [], special: [] };
+            usedHistory = [];
+            render();
+        }
+
+        // 화면 렌더링
+        function render() {
+            renderSection('monster', hand.monster, renderMonsterCard);
+            renderSection('potion', hand.potion, renderPotionCard);
+            renderSection('special', hand.special, renderSpecialCard);
+            renderHistory();
+        }
+
+        function renderSection(type, items, cardRenderFn) {
+            const grid = document.getElementById(`${type}-grid`);
+            const countEl = document.getElementById(`${type}-count`);
+            
+            const maxCount = type === 'special' ? 2 : 5;
+            countEl.textContent = `${items.length}/${maxCount}`;
+
+            if (items.length === 0) {
+                grid.innerHTML = '<div class="empty-msg">카드가 없습니다.</div>';
+                return;
+            }
+
+            grid.innerHTML = '';
+            items.forEach((item, index) => {
+                const cardEl = cardRenderFn(item, index);
+                cardEl.onclick = () => useCard(type, index);
+                grid.appendChild(cardEl);
+            });
+        }
+
+        function renderMonsterCard(val, index) {
+            const card = document.createElement('div');
+            card.className = 'card monster';
+            card.innerHTML = `
+                <div class="card-type">Monster</div>
+                <div class="card-val">${val}</div>
+                <div class="card-desc">자연수 카드</div>
+            `;
+            return card;
+        }
+
+        function renderPotionCard(item, index) {
+            const card = document.createElement('div');
+            card.className = 'card potion';
+            card.innerHTML = `
+                <div class="card-type">Potion</div>
+                <div class="card-val">÷ ${item.val}</div>
+                <div class="card-desc">${item.desc}</div>
+            `;
+            return card;
+        }
+
+        function renderSpecialCard(item, index) {
+            const card = document.createElement('div');
+            card.className = 'card special';
+            card.innerHTML = `
+                <div class="card-type">Special</div>
+                <div class="card-val" style="font-size: 1.3rem;">${item.val}</div>
+                <div class="card-desc">${item.desc}</div>
+            `;
+            return card;
+        }
+
+        function renderHistory() {
+            const historyEl = document.getElementById('history-list');
+            if (usedHistory.length === 0) {
+                historyEl.innerHTML = '<span style="color: #999; font-size: 0.8rem;">사용한 카드가 여기에 표시됩니다.</span>';
+                return;
+            }
+
+            historyEl.innerHTML = usedHistory.map(item => 
+                `<span class="history-chip">${item}</span>`
+            ).join('');
+        }
+
+        // 초기 시작 시 카드 드로우
+        drawAllHand();
+    </script>
+</body>
+</html>
