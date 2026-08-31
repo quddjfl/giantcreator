@@ -303,10 +303,10 @@
     <!-- 메인 게임 화면 -->
     <div id="game-screen">
         <h1>🔮 거인 창조자: 카드 디스펜서</h1>
-        <p class="subtitle">카드를 확인하고, 라운드에서 사용한 카드를 터치하여 손패에서 제거하세요.</p>
+        <p class="subtitle">버튼을 눌러 카드를 뽑고, 라운드에서 사용한 카드를 터치하여 제거하세요.</p>
 
         <div class="controls">
-            <button class="action-btn" onclick="drawAllHand()">🎴 전체 12장 다시 뽑기</button>
+            <button class="action-btn" onclick="drawAllHand()">🎴 카드 뽑기 / 다시 뽑기</button>
             <button class="action-btn reset-btn" onclick="clearHand()">🧹 모든 손패 비우기</button>
         </div>
 
@@ -362,11 +362,10 @@
             { val: "2/3", desc: "1.5배 증가" },
             { val: "3/4", desc: "1.33배 증가" }
         ];
+        // 특수 카드 목록 (시야 차단, 카드 교환 제거)
         const specialPool = [
             { val: "÷ 1/10", desc: "공격력 10배 폭발" },
-            { val: "÷ 2", desc: "상대 공격력 절반" },
-            { val: "카드 교환", desc: "손패 1장 교체" },
-            { val: "시야 차단", desc: "비공개 턴 진행" }
+            { val: "÷ 2", desc: "상대 공격력 절반" }
         ];
 
         let hand = {
@@ -376,22 +375,24 @@
         };
         let usedHistory = [];
 
-        // 시작 버튼 클릭 시 작동
+        // 시작 버튼 클릭 시 작동: 빈 손패 상태로 시작
         function startGame() {
             document.getElementById('start-screen').style.display = 'none';
-            drawAllHand();
+            clearHand();
         }
 
-        // 배열에서 n개 무작위 추출
+        // 배열에서 n개 무작위 추출 (중복 허용 필요 시 조정 가능)
         function getRandomItems(arr, count) {
             const shuffled = [...arr].sort(() => 0.5 - Math.random());
             return shuffled.slice(0, count);
         }
 
-        // 전체 카드를 새로 뽑기 (몬스터 5, 물약 5, 특수 2)
+        // 버튼 클릭 시 전체 카드를 새로 뽑기 (몬스터 5, 물약 5, 특수 2)
         function drawAllHand() {
             hand.monster = getRandomItems(monsterPool, 5);
             hand.potion = getRandomItems(potionPool, 5);
+            
+            // 특수 카드가 2종류이므로 2장 모두 추출
             hand.special = getRandomItems(specialPool, 2);
             usedHistory = [];
             
@@ -434,7 +435,7 @@
             countEl.textContent = `${items.length}/${maxCount}`;
 
             if (items.length === 0) {
-                grid.innerHTML = '<div class="empty-msg">카드가 없습니다.</div>';
+                grid.innerHTML = '<div class="empty-msg">카드를 뽑아주세요.</div>';
                 return;
             }
 
