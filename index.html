@@ -26,6 +26,69 @@
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        /* 시작 화면 오버레이 */
+        #start-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(135deg, #2b1055, #7597de);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        #start-screen h1 {
+            font-size: 2.8rem;
+            color: var(--accent-color);
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
+        }
+
+        #start-screen p.desc {
+            font-size: 1.1rem;
+            max-width: 500px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .start-btn {
+            background-color: var(--accent-color);
+            color: #111;
+            font-size: 1.3rem;
+            font-weight: bold;
+            padding: 16px 40px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.3);
+            transition: all 0.2s ease;
+        }
+
+        .start-btn:hover {
+            transform: scale(1.05);
+            background-color: #ffc300;
+            box-shadow: 0 12px 20px rgba(0,0,0,0.4);
+        }
+
+        /* 메인 게임 화면 */
+        #game-screen {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         h1 {
@@ -49,7 +112,7 @@
             justify-content: center;
         }
 
-        button {
+        button.action-btn {
             background-color: var(--primary-color);
             color: white;
             border: none;
@@ -62,14 +125,10 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
-        button:hover {
+        button.action-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 8px rgba(0,0,0,0.15);
             background-color: #611f64;
-        }
-
-        button:active {
-            transform: translateY(0);
         }
 
         button.reset-btn {
@@ -78,12 +137,12 @@
 
         .hand-container {
             width: 100%;
-            max-width: 900px;
             background: white;
             padding: 20px;
             border-radius: 16px;
             box-shadow: 0 10px 20px rgba(0,0,0,0.05);
             margin-bottom: 20px;
+            box-sizing: border-box;
         }
 
         .section-title {
@@ -196,14 +255,13 @@
             padding: 20px 0;
         }
 
-        /* 사용한 카드 히스토리 */
         .history-container {
             width: 100%;
-            max-width: 900px;
             background: #e9ecef;
             padding: 15px 20px;
             border-radius: 12px;
             margin-top: 10px;
+            box-sizing: border-box;
         }
 
         .history-title {
@@ -231,53 +289,67 @@
 </head>
 <body>
 
-    <h1>🔮 거인 창조자: 카드 디스펜서</h1>
-    <p class="subtitle">버튼을 눌러 카드를 뽑고, 라운드에서 사용한 카드를 터치하여 사용 처리하세요.</p>
-
-    <div class="controls">
-        <button onclick="drawAllHand()">🎴 전체 12장 뽑기 (초기화)</button>
-        <button class="reset-btn" onclick="clearHand()">🧹 모든 손패 비우기</button>
+    <!-- 시작 화면 -->
+    <div id="start-screen">
+        <h1>🔮 거인 창조자</h1>
+        <p style="font-size: 1.3rem; margin-top: -10px; color: #e0aaff;">연금술사의 분수 대결</p>
+        <p class="desc">
+            자연수 몬스터에 분수 물약을 투여하여 가장 강력한 거인을 만드세요!<br>
+            작은 분수로 나누어 몫을 폭발시키는 자가 승리합니다.
+        </p>
+        <button class="start-btn" onclick="startGame()">⚔️ 게임 시작하기</button>
     </div>
 
-    <div class="hand-container">
-        <div class="section-title">
-            🔴 몬스터 카드 (자연수)
-            <span class="count" id="monster-count">0/5</span>
-        </div>
-        <div class="card-grid" id="monster-grid">
-            <div class="empty-msg">카드를 뽑아주세요.</div>
-        </div>
-    </div>
+    <!-- 메인 게임 화면 -->
+    <div id="game-screen">
+        <h1>🔮 거인 창조자: 카드 디스펜서</h1>
+        <p class="subtitle">카드를 확인하고, 라운드에서 사용한 카드를 터치하여 손패에서 제거하세요.</p>
 
-    <div class="hand-container">
-        <div class="section-title">
-            🟢 물약 카드 (분수)
-            <span class="count" id="potion-count">0/5</span>
+        <div class="controls">
+            <button class="action-btn" onclick="drawAllHand()">🎴 전체 12장 다시 뽑기</button>
+            <button class="action-btn reset-btn" onclick="clearHand()">🧹 모든 손패 비우기</button>
         </div>
-        <div class="card-grid" id="potion-grid">
-            <div class="empty-msg">카드를 뽑아주세요.</div>
-        </div>
-    </div>
 
-    <div class="hand-container">
-        <div class="section-title">
-            🟣 특수 카드
-            <span class="count" id="special-count">0/2</span>
+        <div class="hand-container">
+            <div class="section-title">
+                🔴 몬스터 카드 (자연수)
+                <span class="count" id="monster-count">0/5</span>
+            </div>
+            <div class="card-grid" id="monster-grid">
+                <div class="empty-msg">카드를 뽑아주세요.</div>
+            </div>
         </div>
-        <div class="card-grid" id="special-grid">
-            <div class="empty-msg">카드를 뽑아주세요.</div>
-        </div>
-    </div>
 
-    <div class="history-container">
-        <div class="history-title">🗑️ 이번 판에 사용한 카드 목록</div>
-        <div class="history-list" id="history-list">
-            <span style="color: #999; font-size: 0.8rem;">사용한 카드가 여기에 표시됩니다.</span>
+        <div class="hand-container">
+            <div class="section-title">
+                🟢 물약 카드 (분수)
+                <span class="count" id="potion-count">0/5</span>
+            </div>
+            <div class="card-grid" id="potion-grid">
+                <div class="empty-msg">카드를 뽑아주세요.</div>
+            </div>
+        </div>
+
+        <div class="hand-container">
+            <div class="section-title">
+                🟣 특수 카드
+                <span class="count" id="special-count">0/2</span>
+            </div>
+            <div class="card-grid" id="special-grid">
+                <div class="empty-msg">카드를 뽑아주세요.</div>
+            </div>
+        </div>
+
+        <div class="history-container">
+            <div class="history-title">🗑️ 이번 판에 사용한 카드 목록</div>
+            <div class="history-list" id="history-list">
+                <span style="color: #999; font-size: 0.8rem;">사용한 카드가 여기에 표시됩니다.</span>
+            </div>
         </div>
     </div>
 
     <script>
-        // 데이터 정의
+        // 풀 데이터 정의
         const monsterPool = [2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20];
         const potionPool = [
             { val: "1/2", desc: "2배 증가" },
@@ -291,8 +363,8 @@
             { val: "3/4", desc: "1.33배 증가" }
         ];
         const specialPool = [
+            { val: "÷ 1/10", desc: "공격력 10배 폭발" },
             { val: "÷ 2", desc: "상대 공격력 절반" },
-            { val: "÷ 1/10", desc: "내 공격력 10배 폭발" },
             { val: "카드 교환", desc: "손패 1장 교체" },
             { val: "시야 차단", desc: "비공개 턴 진행" }
         ];
@@ -304,13 +376,19 @@
         };
         let usedHistory = [];
 
-        // 랜덤 셔플 함수
+        // 시작 버튼 클릭 시 작동
+        function startGame() {
+            document.getElementById('start-screen').style.display = 'none';
+            drawAllHand();
+        }
+
+        // 배열에서 n개 무작위 추출
         function getRandomItems(arr, count) {
             const shuffled = [...arr].sort(() => 0.5 - Math.random());
             return shuffled.slice(0, count);
         }
 
-        // 전체 카드를 새로 뽑기
+        // 전체 카드를 새로 뽑기 (몬스터 5, 물약 5, 특수 2)
         function drawAllHand() {
             hand.monster = getRandomItems(monsterPool, 5);
             hand.potion = getRandomItems(potionPool, 5);
@@ -320,7 +398,7 @@
             render();
         }
 
-        // 카드를 사용하여 손패에서 제거
+        // 카드 클릭 시 사용 처리 및 손패에서 제거
         function useCard(type, index) {
             const usedItem = hand[type].splice(index, 1)[0];
             
@@ -333,14 +411,14 @@
             render();
         }
 
-        // 모든 카드를 비우기
+        // 모든 손패 비우기
         function clearHand() {
             hand = { monster: [], potion: [], special: [] };
             usedHistory = [];
             render();
         }
 
-        // 화면 렌더링
+        // 전체 UI 렌더링
         function render() {
             renderSection('monster', hand.monster, renderMonsterCard);
             renderSection('potion', hand.potion, renderPotionCard);
@@ -412,9 +490,6 @@
                 `<span class="history-chip">${item}</span>`
             ).join('');
         }
-
-        // 초기 시작 시 카드 드로우
-        drawAllHand();
     </script>
 </body>
 </html>
